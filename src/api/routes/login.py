@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from src.api.auth.security import LoginRequest, LoginResponse
+from src.schemas.auth import LoginRequest, LoginResponse
 from src.api.dependencies import get_auth_service
 from src.services.auth_service import AuthService
 
@@ -12,6 +12,8 @@ def login(payload: LoginRequest, auth_service: AuthService = Depends(get_auth_se
             username=payload.username,
             password=payload.password
         )
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))
     return LoginResponse(auth_token=auth_token, account_id=account_id)

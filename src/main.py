@@ -4,7 +4,7 @@ from src.api.routes.accounts import router as accounts_router
 from src.api.routes.health import router as health_router
 from src.api.routes.results import router as results_router
 from src.api.routes.uploads import router as uploads_router
-from src.api.routes.auth import router as auth_router
+from src.api.routes.login import router as auth_router
 from src.core.config import settings
 from src.db.session import init_db
 

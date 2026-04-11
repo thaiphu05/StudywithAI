@@ -1,14 +1,17 @@
 import bcrypt
 import jwt
+from datetime import datetime, timedelta, timezone
 
 from src.core.config import settings
 from src.services.account_service import AccountService
 
+
 class AuthService:
     def __init__(self) -> None:
         self.secret_key = settings.secret_key
+        self.access_token_expire_minutes = settings.access_token_expire_minutes
 
-    def login(self, username: str, password: str):
+    def login(self, username: str, password: str) -> tuple[str, str]:
         if not self.secret_key:
             raise RuntimeError("SECRET_KEY is not configured")
 
@@ -22,5 +25,9 @@ class AuthService:
         if not password_ok:
             raise ValueError("Invalid username or password")
 
-        token = jwt.encode({"sub": account.account_id}, self.secret_key, algorithm="HS256")
+        payload = {
+            "sub": account.account_id,
+            "exp": datetime.now(timezone.utc) + timedelta(minutes=self.access_token_expire_minutes),
+        }
+        token = jwt.encode(payload, self.secret_key, algorithm="HS256")
         return token, account.account_id

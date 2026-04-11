@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from src.api.dependencies import get_account_service
+from src.api.dependencies import get_account_service, get_current_account
+from src.domain.models import Account
 from src.schemas.account import AccountResponse, CreateAccountRequest
 from src.services.account_service import AccountService
 
@@ -36,7 +37,11 @@ def create_account(
 def get_account(
     account_id: str,
     account_service: AccountService = Depends(get_account_service),
+    current_account: Account = Depends(get_current_account),
+
 ) -> AccountResponse:
+    if account_id != current_account.account_id:
+        raise HTTPException(status_code=403, detail="Forbidden for this account")
     try:
         account = account_service.get_account(account_id)
     except ValueError as exc:
