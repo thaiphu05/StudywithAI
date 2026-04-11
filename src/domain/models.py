@@ -6,6 +6,8 @@ from typing import Optional
 @dataclass
 class Account:
     account_id: str
+    username: str
+    password_hash: str
     email: Optional[str] = None
     token_limit: int = 200000
     token_used: int = 0

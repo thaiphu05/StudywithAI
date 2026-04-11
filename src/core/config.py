@@ -7,8 +7,15 @@ class Settings(BaseSettings):
     default_token_limit: int = 200000
     upload_dir: str = "./uploads"
     ocr_self_host: bool = False
+    ocr_api_key: str | None = None
+    llm_api_key: str | None = None
+    secret_key: str | None = None
     database_url: str = "sqlite:///./app.db"
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
 settings = Settings()

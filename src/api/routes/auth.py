@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from src.api.auth.security import LoginRequest, LoginResponse
+from src.api.dependencies import get_auth_service
 from src.services.auth_service import AuthService
 
-auth_service = AuthService()
 router = APIRouter()
 
 @router.post("/login")
-def login(payload: LoginRequest) -> LoginResponse:
+def login(payload: LoginRequest, auth_service: AuthService = Depends(get_auth_service)) -> LoginResponse:
     try:
         auth_token, account_id = auth_service.login(
             username=payload.username,
@@ -18,5 +18,4 @@ def login(payload: LoginRequest) -> LoginResponse:
 
 @router.post("/logout")
 def logout():
-    # Placeholder for actual logout logic
     return {"message": "Logged out successfully"}

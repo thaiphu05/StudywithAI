@@ -13,3 +13,4 @@ torch==2.4.1
 safetensors==0.4.5
 SQLAlchemy==2.0.36
 psycopg2-binary==2.9.10
+bcrypt==4.2.0

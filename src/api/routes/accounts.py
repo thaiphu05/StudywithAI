@@ -15,6 +15,8 @@ def create_account(
     try:
         account = account_service.create_account(
             account_id=payload.account_id,
+            username=payload.username,
+            password=payload.password,
             email=payload.email,
             token_limit=payload.token_limit,
         )
@@ -23,6 +25,7 @@ def create_account(
 
     return AccountResponse(
         account_id=account.account_id,
+        username=account.username,
         email=account.email,
         token_limit=account.token_limit,
         token_used=account.token_used,
@@ -41,6 +44,7 @@ def get_account(
 
     return AccountResponse(
         account_id=account.account_id,
+        username=account.username,
         email=account.email,
         token_limit=account.token_limit,
         token_used=account.token_used,
