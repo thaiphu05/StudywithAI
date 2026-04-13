@@ -25,8 +25,7 @@ class OCRModel:
     def extract_text(self, image: Image.Image) -> str:
         output = ""
         if self.self_host:
-            output = self.model.predict(
-                                        )
+            output = self.model.predict(image)
         else:
             # Placeholder implementation for API-based OCR
             output = "OCR text from API"
