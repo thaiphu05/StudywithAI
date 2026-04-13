@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from src.api.dependencies import get_account_service, get_current_account
-from src.domain.models import Account
+from src.api.dependencies import get_account_service, require_roles
 from src.schemas.account import AccountResponse, CreateAccountRequest
 from src.services.account_service import AccountService
 
@@ -27,6 +26,7 @@ def create_account(
     return AccountResponse(
         account_id=account.account_id,
         username=account.username,
+        role=account.role,
         email=account.email,
         token_limit=account.token_limit,
         token_used=account.token_used,
@@ -37,10 +37,9 @@ def create_account(
 def get_account(
     account_id: str,
     account_service: AccountService = Depends(get_account_service),
-    current_account: Account = Depends(get_current_account),
-
+    token_payload: dict = Depends(require_roles(["admin", "user"])),
 ) -> AccountResponse:
-    if account_id != current_account.account_id:
+    if token_payload.get("role") != "admin" and account_id != token_payload.get("sub"):
         raise HTTPException(status_code=403, detail="Forbidden for this account")
     try:
         account = account_service.get_account(account_id)
@@ -50,6 +49,7 @@ def get_account(
     return AccountResponse(
         account_id=account.account_id,
         username=account.username,
+        role=account.role,
         email=account.email,
         token_limit=account.token_limit,
         token_used=account.token_used,
