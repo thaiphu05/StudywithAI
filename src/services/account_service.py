@@ -1,7 +1,7 @@
 from collections.abc import Callable
+from typing import Literal
 
 import bcrypt
-from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from src.core.config import settings
@@ -15,11 +15,18 @@ class AccountService:
         self._session_factory = session_factory
 
     @staticmethod
+    def _validate_role(role: str) -> Literal["admin", "user"]:
+        if role not in {"admin", "user"}:
+            raise ValueError("Role must be either 'admin' or 'user'")
+        return role  # type: ignore[return-value]
+
+    @staticmethod
     def _to_domain(account_db: AccountDB) -> Account:
         return Account(
             account_id=account_db.account_id,
             username=account_db.username,
             password_hash=account_db.password_hash,
+            role=AccountService._validate_role(account_db.role),
             email=account_db.email,
             token_limit=account_db.token_limit,
             token_used=account_db.token_used,
@@ -48,6 +55,7 @@ class AccountService:
                 account_id=account_id,
                 username=username,
                 password_hash=password_hash,
+                role="user",
                 email=email,
                 token_limit=token_limit if token_limit is not None else settings.default_token_limit,
                 token_used=0,
@@ -79,6 +87,7 @@ class AccountService:
         account_id: str,
         username: str | None = None,
         password: str | None = None,
+        role: str | None = None,
         email: str | None = None,
         token_limit: int | None = None,
     ) -> Account:
@@ -98,6 +107,9 @@ class AccountService:
                     password.encode("utf-8"),
                     bcrypt.gensalt(),
                 ).decode("utf-8")
+
+            if role is not None:
+                account_db.role = self._validate_role(role)
 
             if email is not None:
                 account_db.email = email

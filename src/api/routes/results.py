@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
-from src.api.dependencies import get_current_account, get_orchestrator
-from src.domain.models import Account
+from src.api.dependencies import get_orchestrator, require_roles
 from src.schemas.result import EvaluationResult
 from src.services.orchestration_service import EvaluationOrchestrator
 
@@ -14,9 +13,9 @@ async def evaluate(
     problem_file: UploadFile = File(...),
     essay_file: UploadFile = File(...),
     orchestrator: EvaluationOrchestrator = Depends(get_orchestrator),
-    current_account: Account = Depends(get_current_account),
+    token_payload: dict = Depends(require_roles(["admin", "user"])),
 ) -> EvaluationResult:
-    if account_id != current_account.account_id:
+    if account_id != token_payload.get("sub"):
         raise HTTPException(status_code=403, detail="Forbidden for this account")
 
     try:

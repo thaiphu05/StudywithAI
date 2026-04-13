@@ -27,7 +27,9 @@ class AuthService:
 
         payload = {
             "sub": account.account_id,
+            "role": account.role,
             "exp": datetime.now(timezone.utc) + timedelta(minutes=self.access_token_expire_minutes),
         }
         token = jwt.encode(payload, self.secret_key, algorithm="HS256")
         return token, account.account_id
+    

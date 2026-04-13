@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
 
 @dataclass
@@ -8,6 +8,7 @@ class Account:
     account_id: str
     username: str
     password_hash: str
+    role: Literal["admin", "user"] = "user"
     email: Optional[str] = None
     token_limit: int = 200000
     token_used: int = 0
