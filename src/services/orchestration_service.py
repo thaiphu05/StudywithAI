@@ -34,6 +34,7 @@ class EvaluationOrchestrator:
     async def extract_text(self, upload_file: UploadFile) -> str:
         content_type = (upload_file.content_type or "").lower()
         raw = await upload_file.read()
+        
         await upload_file.seek(0)
 
         if content_type in ALLOWED_DOCX_TYPES:
