@@ -21,7 +21,7 @@ async def evaluate(
     try:
         return await orchestrator.evaluate_submission(
             account_id=account_id,
-            prompt_file=problem_file,
+            problem_file=problem_file,
             essay_file=essay_file,
         )
     except ValueError as exc:

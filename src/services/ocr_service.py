@@ -1,4 +1,5 @@
 from src.models.OCR_model import OCRModel
+from fastapi import UploadFile
 from PIL import Image 
 from src.utils.image import *
 
@@ -8,9 +9,9 @@ class OCRService:
         self.OCRModel.load_model()
         
     @staticmethod
-    def extract_text_from_image(self, image_path : str) -> str:
+    def extract_text_from_image(self, raw : UploadFile) -> str:
         # Placeholder for OCR provider integration (Tesseract, Vision API, etc.).
-        image = Image.open(image_path)
+        image = Image.open(raw)
         image = preprocessing(image)  
         OCR_text = self.OCRModel.extract_text(image)
         OCR_text = postprocessing(OCR_text)

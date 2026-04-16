@@ -19,6 +19,7 @@ ALLOWED_IMAGE_TYPES = {"image/png", "image/jpeg", "image/jpg"}
 class EvaluationOrchestrator:
     def __init__(self, account_service: AccountService) -> None:
         self.account_service = account_service
+        self.scoring_service = ScoringService()
 
     async def save_upload(self, upload_file: UploadFile) -> Path:
         upload_root = Path(settings.upload_dir)
@@ -46,17 +47,15 @@ class EvaluationOrchestrator:
     async def evaluate_submission(
         self,
         account_id: str,
-        prompt_file: UploadFile,
+        problem_file: UploadFile,
         essay_file: UploadFile,
     ) -> EvaluationResult:
-        prompt_text = await self.extract_text(prompt_file)
-        essay_text = await self.extract_text(essay_file)
+        merge_text ="Problem:" + await self.extract_text(problem_file) + "\n"+ "Essay:" + "\n" + await self.extract_text(essay_file)
 
-        estimated_tokens = ScoringService.estimate_tokens(prompt_text, essay_text)
+        estimated_tokens = ScoringService.estimate_tokens(text=merge_text)
         self.account_service.reserve_tokens(account_id=account_id, tokens=estimated_tokens)
 
-        return ScoringService.evaluate(
-            prompt_text=prompt_text,
-            essay_text=essay_text,
+        return self.scoring_service.evaluate(
+            text=merge_text,
             estimated_tokens=estimated_tokens,
         )
