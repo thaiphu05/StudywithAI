@@ -10,7 +10,6 @@ class OCRService:
         
     @staticmethod
     def extract_text_from_image(self, raw : UploadFile) -> str:
-        # Placeholder for OCR provider integration (Tesseract, Vision API, etc.).
         image = Image.open(raw)
         image = preprocessing(image)  
         OCR_text = self.OCRModel.extract_text(image)
