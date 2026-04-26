@@ -1,11 +1,11 @@
 from src.schemas.result import EvaluationResult
-from src.models.SLM_model import SLMModel
-from src.utils.slm import split_output
+from src.models.LLM_model import LLMModel
+from src.utils.llm import split_output
 
 
-class ScoringService:
+class ScoringWritingService:
     def __init__(self):
-        self.slm_model = SLMModel()
+        self.llm_model = LLMModel()
 
     @staticmethod
     def estimate_tokens(text: str) -> int:
@@ -55,8 +55,8 @@ General Feedback:
             + text
         )
         
-        slm_result = self.slm_model.evaluate(instruction_prompt)
-        criteria, overall_band, summary = split_output(slm_result)
+        llm_result = self.llm_model.evaluate(instruction_prompt)
+        criteria, overall_band, summary = split_output(llm_result)
 
         return EvaluationResult(
             overall_band=overall_band,

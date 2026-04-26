@@ -8,7 +8,8 @@ from src.schemas.result import EvaluationResult
 from src.services.account_service import AccountService
 from src.services.ocr_service import OCRService
 from src.services.parser_service import ParserService
-from src.services.scoring_service import ScoringService
+from src.services.scoring_writing_service import ScoringWritingService
+
 
 ALLOWED_DOCX_TYPES = {
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -19,7 +20,7 @@ ALLOWED_IMAGE_TYPES = {"image/png", "image/jpeg", "image/jpg"}
 class EvaluationOrchestrator:
     def __init__(self, account_service: AccountService) -> None:
         self.account_service = account_service
-        self.scoring_service = ScoringService()
+        self.scoring_service = ScoringWritingService()
 
     async def save_upload(self, upload_file: UploadFile) -> Path:
         upload_root = Path(settings.upload_dir)
@@ -52,7 +53,7 @@ class EvaluationOrchestrator:
     ) -> EvaluationResult:
         merge_text ="Problem:" + await self.extract_text(problem_file) + "\n"+ "Essay:" + "\n" + await self.extract_text(essay_file)
 
-        estimated_tokens = ScoringService.estimate_tokens(text=merge_text)
+        estimated_tokens = ScoringWritingService.estimate_tokens(text=merge_text)
         self.account_service.reserve_tokens(account_id=account_id, tokens=estimated_tokens)
 
         return self.scoring_service.evaluate(
