@@ -103,4 +103,4 @@ def split_output(text: str) -> tuple[list[CriterionFeedback], float, str]:
     if not summary:
         summary = text.strip()[:500]
 
-    return criteria, overall_band, summaryl
+    return criteria, overall_band, summary

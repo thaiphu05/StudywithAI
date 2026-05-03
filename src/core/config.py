@@ -2,10 +2,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    app_name: str = "IELTS Writing Task 2 Evaluator"
+    app_name: str = "IELTS Test"
     env: str = "dev"
     default_token_limit: int = 200000
     upload_dir: str = "./uploads"
+    writing_model_path: str = "./modernbert_best_model.pth"
     ocr_self_host: bool = False
     ocr_api_key: str | None = None
     llm_api_key: str | None = None
