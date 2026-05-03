@@ -1,17 +1,50 @@
+from pathlib import Path
+
+import torch
+
+from src.core.config import settings
 from src.schemas.result import EvaluationResult
 from src.models.LLM_model import LLMModel
+from src.models.WR_model import WR_Model
 from src.utils.llm import split_output
+from src.utils.writing import format_writing_model_output
 
 
 class ScoringWritingService:
     def __init__(self):
         self.llm_model = LLMModel()
-
+        model_path = Path(settings.writing_model_path)
+        if not model_path.exists():
+            raise FileNotFoundError(
+                f"Writing model checkpoint not found: {model_path}. "
+                "Set WRITING_MODEL_PATH in .env or update settings.writing_model_path."
+            )
+        wr_model = WR_Model()
+        self.model, self.tokenizer = wr_model.load_model(path=str(model_path))
     @staticmethod
     def estimate_tokens(text: str) -> int:
         return max(1, len(text)) // 4
-
-    def evaluate(self, text: str, estimated_tokens: int) -> EvaluationResult:
+    
+    def model_evaluate(self, text: str, estimated_tokens: int) -> EvaluationResult:
+        self.model.eval()
+        data = self.tokenizer(text=text,add_special_tokens=True,
+                            padding='max_length',
+                            truncation='longest_first',
+                            max_length=1024,
+                            return_attention_mask=True)
+        
+        test_input_ids = data['input_ids']
+        test_masks = data['attention_mask']
+        test_input_ids_tensor = torch.tensor(test_input_ids).unsqueeze(0).to("cpu")
+        test_masks_tensor = torch.tensor(test_masks).unsqueeze(0).to("cpu")
+        out = self.model(test_input_ids_tensor, test_masks_tensor)
+        predicted_scaled = out.cpu().detach().numpy().round()
+        return format_writing_model_output(
+            predicted_scaled=predicted_scaled,
+            estimated_tokens=estimated_tokens,
+        )
+        
+    def llm_evaluate(self, text: str, estimated_tokens: int) -> EvaluationResult:
         instruction_prompt = (
             """
 Role: Act as a professional IELTS Writing Task 2 Examiner.

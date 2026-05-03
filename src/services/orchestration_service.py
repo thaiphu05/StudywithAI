@@ -45,18 +45,24 @@ class EvaluationOrchestrator:
             return OCRService.extract_text_from_image(raw)
         raise ValueError("Unsupported file type")
 
-    async def evaluate_submission(
+    async def evaluate_writing_submission(
         self,
         account_id: str,
         problem_file: UploadFile,
         essay_file: UploadFile,
+        use_llm: bool = False,
     ) -> EvaluationResult:
-        merge_text ="Problem:" + await self.extract_text(problem_file) + "\n"+ "Essay:" + "\n" + await self.extract_text(essay_file)
-
-        estimated_tokens = ScoringWritingService.estimate_tokens(text=merge_text)
+        input_llm ="Problem:" + await self.extract_text(problem_file) + "\n"+ "Essay:" + "\n" + await self.extract_text(essay_file)
+        input_model = await self.extract_text(problem_file) +"[SEP]"+ await self.extract_text(essay_file)
+        estimated_tokens = ScoringWritingService.estimate_tokens(text=input_llm)
         self.account_service.reserve_tokens(account_id=account_id, tokens=estimated_tokens)
 
-        return self.scoring_service.evaluate(
-            text=merge_text,
+        if use_llm:
+            return self.scoring_service.llm_evaluate(
+                text=input_llm,
+                estimated_tokens=estimated_tokens,
+            )
+        return self.scoring_service.model_evaluate(
+            text=input_model,
             estimated_tokens=estimated_tokens,
         )
