@@ -21,6 +21,7 @@ class EvaluationOrchestrator:
     def __init__(self, account_service: AccountService) -> None:
         self.account_service = account_service
         self.scoring_service = ScoringWritingService()
+        self.ocr_service = OCRService()
 
     async def save_upload(self, upload_file: UploadFile) -> Path:
         upload_root = Path(settings.upload_dir)
@@ -42,7 +43,7 @@ class EvaluationOrchestrator:
         if content_type in ALLOWED_DOCX_TYPES:
             return ParserService.parse_docx(raw)
         if content_type in ALLOWED_IMAGE_TYPES:
-            return OCRService.extract_text_from_image(raw)
+            return self.ocr_service.extract_text_from_image(raw)
         raise ValueError("Unsupported file type")
 
     async def evaluate_writing_submission(
@@ -50,7 +51,7 @@ class EvaluationOrchestrator:
         account_id: str,
         problem_file: UploadFile,
         essay_file: UploadFile,
-        use_llm: bool = False,
+        use_llm: bool = True,
     ) -> EvaluationResult:
         input_llm ="Problem:" + await self.extract_text(problem_file) + "\n"+ "Essay:" + "\n" + await self.extract_text(essay_file)
         input_model = await self.extract_text(problem_file) +"[SEP]"+ await self.extract_text(essay_file)
