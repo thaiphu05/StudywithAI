@@ -7,7 +7,7 @@ from src.services.orchestration_service import EvaluationOrchestrator
 router = APIRouter()
 
 
-@router.post("", response_model=UploadResponse)
+@router.post("/", response_model=UploadResponse)
 async def upload_problem(
     problem_file: UploadFile = File(...),
     essay_file: UploadFile = File(...),
