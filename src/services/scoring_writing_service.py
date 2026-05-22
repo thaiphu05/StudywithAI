@@ -38,7 +38,7 @@ class ScoringWritingService:
         test_input_ids_tensor = torch.tensor(test_input_ids).unsqueeze(0).to("cpu")
         test_masks_tensor = torch.tensor(test_masks).unsqueeze(0).to("cpu")
         out = self.model(test_input_ids_tensor, test_masks_tensor)
-        predicted_scaled = out.cpu().detach().numpy().round()
+        predicted_scaled = (out.cpu().detach().numpy() * 2).round() / 2
         return format_writing_model_output(
             predicted_scaled=predicted_scaled,
             estimated_tokens=estimated_tokens,
