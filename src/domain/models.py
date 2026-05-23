@@ -21,6 +21,15 @@ class Account:
 
 
 @dataclass
+class StudyHistory:
+    id: int
+    account_id: int
+    history_type: Literal["writing", "speaking"]
+    payload: dict
+    created_at: datetime
+
+
+@dataclass
 class EvaluationJob:
     job_id: str
     account_id: int

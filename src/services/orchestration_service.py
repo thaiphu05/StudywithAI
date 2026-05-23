@@ -61,7 +61,7 @@ class EvaluationOrchestrator:
         problem_file: UploadFile,
         essay_file: UploadFile,
         use_llm: bool = False,
-    ) -> EvaluationResult:
+    ) -> tuple[EvaluationResult, str, str]:
         problem_text = await self.extract_text(problem_file)
         essay_text = await self.extract_text(essay_file)
         input_llm = "Problem:" + problem_text + "\n" + "Essay:" + "\n" + essay_text
@@ -71,11 +71,19 @@ class EvaluationOrchestrator:
         await self._save_files_if_pro(account_id, problem_file, essay_file)
 
         if use_llm:
-            return self.scoring_service.llm_evaluate(
-                text=input_llm,
-                estimated_tokens=estimated_tokens,
+            return (
+                self.scoring_service.llm_evaluate(
+                    text=input_llm,
+                    estimated_tokens=estimated_tokens,
+                ),
+                problem_text,
+                essay_text,
             )
-        return self.scoring_service.model_evaluate(
-            text=input_model,
-            estimated_tokens=estimated_tokens,
+        return (
+            self.scoring_service.model_evaluate(
+                text=input_model,
+                estimated_tokens=estimated_tokens,
+            ),
+            problem_text,
+            essay_text,
         )

@@ -7,6 +7,7 @@ from fastapi.security import OAuth2PasswordBearer
 from src.core.config import settings
 from src.services.account_service import AccountService
 from src.services.auth_service import AuthService
+from src.services.history_service import HistoryService
 from src.services.orchestration_service import EvaluationOrchestrator
 
 logger = logging.getLogger(__name__)
@@ -14,6 +15,7 @@ logger = logging.getLogger(__name__)
 account_service = AccountService()
 auth_service = AuthService()
 orchestrator = EvaluationOrchestrator(account_service=account_service)
+history_service = HistoryService()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
@@ -28,6 +30,10 @@ def get_orchestrator() -> EvaluationOrchestrator:
 
 def get_auth_service() -> AuthService:
     return auth_service
+
+
+def get_history_service() -> HistoryService:
+    return history_service
 
 
 def validate_token(token: str = Depends(oauth2_scheme)) -> dict:
