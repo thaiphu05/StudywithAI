@@ -9,7 +9,7 @@ router = APIRouter()
 def login(payload: LoginRequest, auth_service: AuthService = Depends(get_auth_service)) -> LoginResponse:
     try:
         auth_token, account_id = auth_service.login(
-            username=payload.username,
+            identifier=payload.identifier,
             password=payload.password
         )
     except RuntimeError as e:

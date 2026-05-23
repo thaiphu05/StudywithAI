@@ -11,19 +11,19 @@ class AuthService:
         self.secret_key = settings.secret_key
         self.access_token_expire_minutes = settings.access_token_expire_minutes
 
-    def login(self, username: str, password: str) -> tuple[str, str]:
+    def login(self, identifier: str, password: str) -> tuple[str, int]:
         if not self.secret_key:
             raise RuntimeError("SECRET_KEY is not configured")
 
         account_service = AccountService()
-        account = account_service.get_account_by_username(username)
+        account = account_service.get_account_by_identifier(identifier)
 
         password_ok = bcrypt.checkpw(
             password.encode("utf-8"),
             account.password_hash.encode("utf-8"),
         )
         if not password_ok:
-            raise ValueError("Invalid username or password")
+            raise ValueError("Invalid credentials")
 
         payload = {
             "sub": account.account_id,
