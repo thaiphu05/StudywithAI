@@ -1,10 +1,16 @@
+from datetime import timedelta
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     app_name: str = "IELTS Test"
     env: str = "dev"
-    default_token_limit: int = 200000
+    default_token_limit: int = 10000
+    normal_token_limit: int = 10000
+    plus_token_limit: int = 50000
+    pro_token_limit: int = 100000
+    plan_duration: timedelta = timedelta(days=30)
     upload_dir: str = "./uploads"
     writing_model_path: str = "./modernbert_best_model.pth"
     ocr_self_host: bool = False

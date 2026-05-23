@@ -1,3 +1,5 @@
+import logging
+
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -6,6 +8,8 @@ from src.core.config import settings
 from src.services.account_service import AccountService
 from src.services.auth_service import AuthService
 from src.services.orchestration_service import EvaluationOrchestrator
+
+logger = logging.getLogger(__name__)
 
 account_service = AccountService()
 auth_service = AuthService()
@@ -50,12 +54,21 @@ def validate_token(token: str = Depends(oauth2_scheme)) -> dict:
                 headers={"WWW-Authenticate": "Bearer"},
             )
     except jwt.PyJWTError as exc:
+        logger.error("JWT decode failed: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",
             headers={"WWW-Authenticate": "Bearer"},
         ) from exc
 
+    try:
+        payload["sub"] = int(account_id)
+    except (TypeError, ValueError):
+        logger.error("Cannot convert JWT sub '%s' to int", account_id)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token invalid or expired — please log out and log in again",
+        )
     return payload
 
 

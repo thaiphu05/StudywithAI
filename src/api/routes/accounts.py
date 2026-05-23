@@ -14,10 +14,11 @@ def create_account(
 ) -> AccountResponse:
     try:
         account = account_service.create_account(
-            account_id=payload.account_id,
-            username=payload.username,
             password=payload.password,
             email=payload.email,
+            phone=payload.phone,
+            full_name=payload.full_name,
+            account_type=payload.account_type,
             token_limit=payload.token_limit,
         )
     except ValueError as exc:
@@ -25,9 +26,11 @@ def create_account(
 
     return AccountResponse(
         account_id=account.account_id,
-        username=account.username,
         role=account.role,
         email=account.email,
+        phone=account.phone,
+        full_name=account.full_name,
+        account_type=account.account_type,
         token_limit=account.token_limit,
         token_used=account.token_used,
     )
@@ -35,7 +38,7 @@ def create_account(
 
 @router.get("/{account_id}", response_model=AccountResponse)
 def get_account(
-    account_id: str,
+    account_id: int,
     account_service: AccountService = Depends(get_account_service),
     token_payload: dict = Depends(require_roles(["admin", "user"])),
 ) -> AccountResponse:
@@ -48,9 +51,11 @@ def get_account(
 
     return AccountResponse(
         account_id=account.account_id,
-        username=account.username,
         role=account.role,
         email=account.email,
+        phone=account.phone,
+        full_name=account.full_name,
+        account_type=account.account_type,
         token_limit=account.token_limit,
         token_used=account.token_used,
     )
