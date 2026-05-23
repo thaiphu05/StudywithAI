@@ -7,7 +7,11 @@ python-docx==1.2.0
 email-validator==2.2.0
 pytest==8.3.4
 Pillow==11.1.0
-transformers==4.44.2
+numpy==1.26.4
+opencv-python-headless==4.9.0.80
+paddleocr==2.7.3
+paddlepaddle==2.6.2
+transformers==4.48.3
 huggingface_hub==0.24.7
 torch==2.4.1
 safetensors==0.4.5
@@ -15,3 +19,4 @@ SQLAlchemy==2.0.36
 psycopg2-binary==2.9.10
 bcrypt==4.2.0
 google-genai
+PyJWT==2.9.0

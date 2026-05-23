@@ -46,17 +46,29 @@ class EvaluationOrchestrator:
             return self.ocr_service.extract_text_from_image(raw)
         raise ValueError("Unsupported file type")
 
+    async def _save_files_if_pro(self, account_id: int, problem_file: UploadFile, essay_file: UploadFile) -> None:
+        account = self.account_service.get_account(account_id)
+        if account.account_type != "pro":
+            return
+        await self.save_upload(problem_file)
+        await problem_file.seek(0)
+        await self.save_upload(essay_file)
+        await essay_file.seek(0)
+
     async def evaluate_writing_submission(
         self,
-        account_id: str,
+        account_id: int,
         problem_file: UploadFile,
         essay_file: UploadFile,
-        use_llm: bool = True,
+        use_llm: bool = False,
     ) -> EvaluationResult:
-        input_llm ="Problem:" + await self.extract_text(problem_file) + "\n"+ "Essay:" + "\n" + await self.extract_text(essay_file)
-        input_model = await self.extract_text(problem_file) +"[SEP]"+ await self.extract_text(essay_file)
+        problem_text = await self.extract_text(problem_file)
+        essay_text = await self.extract_text(essay_file)
+        input_llm = "Problem:" + problem_text + "\n" + "Essay:" + "\n" + essay_text
+        input_model = problem_text + "[SEP]" + essay_text
         estimated_tokens = ScoringWritingService.estimate_tokens(text=input_llm)
         self.account_service.reserve_tokens(account_id=account_id, tokens=estimated_tokens)
+        await self._save_files_if_pro(account_id, problem_file, essay_file)
 
         if use_llm:
             return self.scoring_service.llm_evaluate(
