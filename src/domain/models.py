@@ -12,7 +12,7 @@ class Account:
     phone: Optional[str] = None
     full_name: Optional[str] = None
     account_type: Literal["normal", "plus", "pro"] = "normal"
-    token_limit: int = 10000
+    token_limit: int = 5000
     token_used: int = 0
     plan_expires_at: Optional[datetime] = None
     tokens_reset_at: Optional[datetime] = None

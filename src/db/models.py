@@ -20,7 +20,7 @@ class AccountDB(Base):
     phone: Mapped[str | None] = mapped_column(String(20), unique=True, nullable=True)
     full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     account_type: Mapped[str] = mapped_column(String(10), nullable=False, default="normal")
-    token_limit: Mapped[int] = mapped_column(Integer, nullable=False, default=10000)
+    token_limit: Mapped[int] = mapped_column(Integer, nullable=False, default=5000)
     token_used: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     plan_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     tokens_reset_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
