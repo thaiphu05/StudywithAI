@@ -15,16 +15,18 @@ async def evaluate_writing(
     problem_file: UploadFile = File(...),
     essay_file: UploadFile = File(...),
     orchestrator: EvaluationOrchestrator = Depends(get_orchestrator),
-    account_service: AccountService = Depends(get_account_service),
     history_service: HistoryService = Depends(get_history_service),
+    MLmodel_type: bool = False,
     token_payload: dict = Depends(require_roles(["admin", "user"])),
 ) -> EvaluationResult:
     if account_id != token_payload.get("sub"):
         raise HTTPException(status_code=403, detail="Forbidden for this account")
 
     try:
-        account = account_service.get_account(account_id)
-        use_llm = account.account_type == "pro"
+        if MLmodel_type:
+            use_llm = True
+        else:
+            use_llm = False
         result, prompt_text, essay_text = await orchestrator.evaluate_writing_submission(
             account_id=account_id,
             problem_file=problem_file,

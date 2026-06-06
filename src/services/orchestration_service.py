@@ -66,10 +66,12 @@ class EvaluationOrchestrator:
         essay_text = await self.extract_text(essay_file)
         input_llm = "Problem:" + problem_text + "\n" + "Essay:" + "\n" + essay_text
         input_model = problem_text + "[SEP]" + essay_text
-        estimated_tokens = ScoringWritingService.estimate_tokens(text=input_llm)
+        estimated_tokens = self.scoring_service.estimate_tokens(
+            text=input_llm if use_llm else input_model,
+            use_llm=use_llm,
+        )
         self.account_service.reserve_tokens(account_id=account_id, tokens=estimated_tokens)
         await self._save_files_if_pro(account_id, problem_file, essay_file)
-
         if use_llm:
             return (
                 self.scoring_service.llm_evaluate(

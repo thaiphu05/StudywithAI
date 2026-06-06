@@ -22,7 +22,9 @@ class ScoringWritingService:
         wr_model = WR_Model()
         self.model, self.tokenizer = wr_model.load_model(path=str(model_path))
     @staticmethod
-    def estimate_tokens(text: str) -> int:
+    def estimate_tokens(text: str, use_llm: bool = False) -> int:
+        if use_llm:
+            return max(1, len(text)) // 2
         return max(1, len(text)) // 4
     
     def model_evaluate(self, text: str, estimated_tokens: int) -> EvaluationResult:

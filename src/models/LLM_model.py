@@ -12,10 +12,10 @@ class LLMModel:
         genai.configure(api_key=settings.llm_api_key) 
         self.model = genai.GenerativeModel(
             model_name=self.model_name,
-            generation_config={"max_output_tokens": 1024}
+            generation_config={"max_output_tokens": 8192}
         )
 
-    def generate_text(self, prompt: str, max_length: int = 50) -> str:
+    def generate_text(self, prompt: str) -> str:
         self.load_model()
 
         response = self.model.generate_content(prompt)
