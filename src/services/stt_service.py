@@ -1,11 +1,11 @@
+from src.core.config import settings
 from src.models.STT_model import STTModel
-from src.utils.image import *
+
 
 class STTService:
-    def __init__ (self):
-        self.STTModel = STTModel()
-        self.STTModel.load_model()
-        
-    @staticmethod
-    def transcribe_audio(self, audio: bytes) -> str:
-        return self.STTModel.transcribe_audio(audio)
+    def __init__(self) -> None:
+        self.model = STTModel(model_size=settings.stt_model_size)
+        self.model.load_model()
+
+    def transcribe(self, audio: bytes) -> dict:
+        return self.model.transcribe(audio)

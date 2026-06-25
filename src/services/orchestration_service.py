@@ -8,9 +8,11 @@ from src.schemas.result import EvaluationResult
 from src.services.account_service import AccountService
 from src.services.ocr_service import OCRService
 from src.services.parser_service import ParserService
+from src.services.scoring_speaking_service import ScoringSpeakingService
 from src.services.scoring_writing_service import ScoringWritingService
 
 
+ALLOWED_TEXT_TYPES = {"text/plain"}
 ALLOWED_DOCX_TYPES = {
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 }
@@ -22,6 +24,7 @@ class EvaluationOrchestrator:
         self.account_service = account_service
         self.scoring_service = ScoringWritingService()
         self.ocr_service = OCRService()
+        self.speaking_scoring_service = ScoringSpeakingService()
 
     async def save_upload(self, upload_file: UploadFile) -> Path:
         upload_root = Path(settings.upload_dir)
@@ -40,6 +43,8 @@ class EvaluationOrchestrator:
         
         await upload_file.seek(0)
 
+        if content_type in ALLOWED_TEXT_TYPES:
+            return raw.decode("utf-8")
         if content_type in ALLOWED_DOCX_TYPES:
             return ParserService.parse_docx(raw)
         if content_type in ALLOWED_IMAGE_TYPES:
@@ -88,4 +93,21 @@ class EvaluationOrchestrator:
             ),
             problem_text,
             essay_text,
+        )
+
+    async def evaluate_speaking_submission(
+        self,
+        account_id: int,
+        audio_file: UploadFile,
+        topic: str = "",
+    ) -> EvaluationResult:
+        audio_bytes = await audio_file.read()
+        estimated_tokens = self.speaking_scoring_service.estimate_tokens(
+            topic + (audio_file.filename or "")
+        )
+        self.account_service.reserve_tokens(account_id, estimated_tokens)
+
+        return self.speaking_scoring_service.evaluate_from_audio(
+            audio=audio_bytes,
+            topic=topic,
         )

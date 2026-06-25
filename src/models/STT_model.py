@@ -1,27 +1,46 @@
-import os
-from transformers import AutoModel
+from io import BytesIO
 
-from pydantic import BaseModel  
-from src.core.config import settings
 
 class STTModel:
-    def __init__(self, self_host: bool | None = None, model_name: str | None = None) -> None:
-        self.self_host = settings.stt_self_host if self_host is None else self_host
+    def __init__(self, model_size: str = "base") -> None:
+        self.model_size = model_size
         self.model = None
-        self.model_name = model_name
-        self.stt_api = None
-        
 
     def load_model(self) -> None:
-        if self.self_host:
-            self.model = AutoModel.from_pretrained(self.model_name)
-        else:
-            self.stt_api = os.getenv("STT_API_KEY")
+        from faster_whisper import WhisperModel
 
-    def transcribe_audio(self, audio_file: bytes) -> str:
-        output = ""
-        if self.self_host:
-            output = self.model.predict(audio_file)
-        else:
-            output = "Transcribed text from API"
-        return output
+        self.model = WhisperModel(
+            self.model_size,
+            device="cpu",
+            compute_type="int8",
+        )
+
+    def transcribe(self, audio_bytes: bytes) -> dict:
+        import av
+        import numpy as np
+
+        container = av.open(BytesIO(audio_bytes))
+        out_frames: list[np.ndarray] = []
+        for frame in container.decode(audio=0):
+            out_frames.append(frame.to_ndarray())
+        audio = np.concatenate(out_frames, axis=1)
+        audio = audio.mean(axis=0).astype(np.float32)
+
+        segments, info = self.model.transcribe(audio, beam_size=5)
+
+        text_parts: list[str] = []
+        segment_list: list[dict] = []
+        for seg in segments:
+            text_parts.append(seg.text)
+            segment_list.append({
+                "start": seg.start,
+                "end": seg.end,
+                "text": seg.text.strip(),
+            })
+
+        return {
+            "text": " ".join(text_parts).strip(),
+            "segments": segment_list,
+            "duration": info.duration,
+            "language": info.language,
+        }

@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     writing_model_path: str = "./modernbert_best_model.pth"
     ocr_self_host: bool = False
     ocr_api_key: str | None = None
+    stt_self_host: bool = True
+    stt_model_size: str = "base"
     llm_api_key: str | None = None
     secret_key: str | None = None
     access_token_expire_minutes: int = 720
