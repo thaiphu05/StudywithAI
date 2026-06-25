@@ -65,5 +65,66 @@ async def evaluate_writing(
             raise HTTPException(status_code=402, detail=message) from exc
         raise HTTPException(status_code=400, detail=message) from exc
 
-# @router.post("/speaking/{account_id}", response_model=EvaluationResult)
-# async def evaluate_speaking
+ALLOWED_AUDIO_TYPES = {
+    "audio/mpeg",
+    "audio/mp3",
+    "audio/wav",
+    "audio/x-wav",
+    "audio/webm",
+    "audio/mp4",
+    "audio/x-m4a",
+}
+
+
+@router.post("/speaking/{account_id}", response_model=EvaluationResult)
+async def evaluate_speaking(
+    account_id: int,
+    audio_file: UploadFile = File(...),
+    topic: str = "",
+    orchestrator: EvaluationOrchestrator = Depends(get_orchestrator),
+    history_service: HistoryService = Depends(get_history_service),
+    token_payload: dict = Depends(require_roles(["admin", "user"])),
+) -> EvaluationResult:
+    if account_id != token_payload.get("sub"):
+        raise HTTPException(status_code=403, detail="Forbidden for this account")
+
+    content_type = (audio_file.content_type or "").lower()
+    if content_type not in ALLOWED_AUDIO_TYPES:
+        raise HTTPException(status_code=400, detail="Unsupported audio format")
+
+    try:
+        result = await orchestrator.evaluate_speaking_submission(
+            account_id=account_id,
+            audio_file=audio_file,
+            topic=topic,
+        )
+        history_payload = {
+            "topic": topic,
+            "overall_band": result.overall_band,
+            "summary": result.summary,
+            "criteria": [
+                {
+                    "criterion": item.criterion,
+                    "band": item.band,
+                    "explanation": item.explanation,
+                }
+                for item in result.criteria
+            ],
+            "estimated_tokens_used": result.estimated_tokens_used,
+        }
+        try:
+            history_service.create_history(
+                account_id=account_id,
+                history_type="speaking",
+                payload=history_payload,
+            )
+        except ValueError:
+            pass
+        return result
+    except ValueError as exc:
+        message = str(exc)
+        if message == "Account not found":
+            raise HTTPException(status_code=404, detail=message) from exc
+        if message == "Token limit exceeded":
+            raise HTTPException(status_code=402, detail=message) from exc
+        raise HTTPException(status_code=400, detail=message) from exc
