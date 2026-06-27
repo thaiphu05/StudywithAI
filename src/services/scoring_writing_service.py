@@ -19,8 +19,7 @@ class ScoringWritingService:
                 f"Writing model checkpoint not found: {model_path}. "
                 "Set WRITING_MODEL_PATH in .env or update settings.writing_model_path."
             )
-        wr_model = WR_Model()
-        self.model, self.tokenizer = wr_model.load_model(path=str(model_path))
+        self.model, self.tokenizer = WR_Model.load_model(path=str(model_path))
     @staticmethod
     def estimate_tokens(text: str, use_llm: bool = False) -> int:
         if use_llm:

@@ -2,42 +2,48 @@ import torch
 import torch.nn as nn
 from transformers import AutoModelForMaskedLM, AutoTokenizer
 
-
 model_id = "answerdotai/ModernBERT-base"
-tokenizer = AutoTokenizer.from_pretrained(model_id)
-model = AutoModelForMaskedLM.from_pretrained(model_id)
+
 
 class WR_Model(nn.Module):
 
-    def __init__(self, drop_rate=0.2):
+    def __init__(
+        self,
+        backbone,
+        hidden_dim=256,
+        num_labels=5,
+        drop_rate=0.2,
+    ):
+        super().__init__()
 
-        super(WR_Model, self).__init__()
-        D_in, D_out = 768, 5
-        global model
-        global tokenizer
-        self.modernbert_masked_lm = model
-        self.modernbert_base = self.modernbert_masked_lm.model
+        self.backbone = backbone
+        self.config = backbone.config
+        hidden_size = self.backbone.config.hidden_size
 
         self.regressor = nn.Sequential(
+            nn.Linear(hidden_size, hidden_dim),
+            nn.GELU(),
             nn.Dropout(drop_rate),
-            nn.Linear(D_in, D_out))
+            nn.Linear(hidden_dim, num_labels)
+        )
 
-    def forward(self, input_ids, attention_masks):
-            outputs = self.modernbert_base(input_ids, attention_mask=attention_masks)
-            last_hidden_state = outputs.last_hidden_state
-        
-            mask = attention_masks.unsqueeze(-1)
-            masked = last_hidden_state * mask
-        
-            sum_embeddings = masked.sum(dim=1)
-            sum_mask = mask.sum(dim=1)
-        
-            mean_pooled = sum_embeddings / sum_mask
-        
-            outputs = self.regressor(mean_pooled)
-            return outputs
-    
-    def load_model(self, path):
-        model = WR_Model(0.2)
-        model.load_state_dict(torch.load(path, map_location=torch.device('cpu'), weights_only=True))
+    def mean_pooling(self, hidden_states, attention_mask):
+        mask = attention_mask.unsqueeze(-1).float()
+        summed = (hidden_states * mask).sum(dim=1)
+        counts = mask.sum(dim=1).clamp(min=1e-9)
+        return summed / counts
+
+    def forward(self, input_ids, attention_mask, **kwargs):
+        outputs = self.backbone(input_ids=input_ids, attention_mask=attention_mask)
+        pooled = self.mean_pooling(outputs.last_hidden_state, attention_mask)
+        logits = self.regressor(pooled)
+        return logits
+
+    @staticmethod
+    def load_model(path):
+        tokenizer = AutoTokenizer.from_pretrained(model_id)
+        backbone = AutoModelForMaskedLM.from_pretrained(model_id).model
+        model = WR_Model(backbone=backbone)
+        state = torch.load(path, map_location=torch.device("cpu"), weights_only=True)
+        model.load_state_dict(state)
         return model, tokenizer
